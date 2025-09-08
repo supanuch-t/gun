@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GPU Shadow with OBJ - Multi Light + Light Control + Gun Color</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: sans-serif;
+        }
+        #controls label {
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Light Control -->
+    <div id="controls">
+        <label>Key Light: <input id="keyLightControl" type="range" min="0" max="2" step="0.1" value="1"></label>
+        <label>Fill Light: <input id="fillLightControl" type="range" min="0" max="2" step="0.1" value="0.6"></label>
+        <label>Back Light: <input id="backLightControl" type="range" min="0" max="2" step="0.1" value="0.6"></label>
+        <label>Rim Light: <input id="rimLightControl" type="range" min="0" max="2" step="0.1" value="0.6"></label>
+    </div>
+
+    <!-- three.js core -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Scene
+        const scene = new THREE.Scene();
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 5);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Texture Loader
+        const textureLoader = new THREE.TextureLoader();
+
+        // Gun textures
+        const baseColor = textureLoader.load("https://supanuch-t.github.io/gun/Base_baseColor.png");
+        const roughness = textureLoader.load("https://supanuch-t.github.io/gun/Base_metallicRoughness.png");
+        const normalMap = textureLoader.load("https://supanuch-t.github.io/gun/Base_normal.png");
+
+        // Background
+        const bg = textureLoader.load("https://supanuch-t.github.io/gun/uuu.png");
+        scene.background = bg;
+
+        // Ground
+        const groundTex = textureLoader.load("https://supanuch-t.github.io/gun/lll.jpg");
+        groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+        groundTex.repeat.set(4, 4);
+        const planeGeo = new THREE.PlaneGeometry(20, 20);
+        const planeMat = new THREE.MeshStandardMaterial({
+            map: groundTex,
+            roughness: 0.7,
+            metalness: 0.2
+        });
+        const plane = new THREE.Mesh(planeGeo, planeMat);
+        plane.rotation.x = -Math.PI / 2;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // Lights
+        const keyLight = new THREE.DirectionalLight(0xffffff, 1);
+        keyLight.position.set(5, 10, 5);
+        keyLight.castShadow = true;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffcccc, 0.6);
+        fillLight.position.set(-5, 5, 0);
+        scene.add(fillLight);
+
+        const backLight = new THREE.DirectionalLight(0xccffcc, 0.6);
+        backLight.position.set(5, 5, 0);
+        scene.add(backLight);
+
+        const rimLight = new THREE.DirectionalLight(0xccccff, 0.6);
+        rimLight.position.set(0, 5, -5);
+        scene.add(rimLight);
+
+        const ambient = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambient);
+
+        // Load OBJ model
+        const loader = new THREE.OBJLoader();
+
+        loader.load(
+            "https://supanuch-t.github.io/gun/gun.obj ",
+            function (object) {
+                object.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshStandardMaterial({
+                            map: baseColor,
+                            roughnessMap: roughness,
+                            normalMap: normalMap,
+                            roughness: 0.6,
+                            metalness: 0.3
+                        });
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                object.position.y = 0.5;
+                scene.add(object);
+            },
+            undefined,
+            function (error) {
+                console.error("Error loading OBJ:", error);
+            }
+        );
+
+        const loader2 = new THREE.OBJLoader();
+
+        loader2.load(
+            "https://supanuch-t.github.io/gun/yyy.obj ",
+            function (object2) {
+                object2.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshStandardMaterial({
+                            map: baseColor2,
+                            roughnessMap: roughness2,
+                            normalMap: normalMap2,
+                            uoimalMap: uoimalMap2
+                        });
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                object2.position.set(0.2, 0.2, 0.5) ;
+                object2.scale.set(0.3, 0.3, 0.3) ;
+                scene.add(object2);
+            },
+            undefined,
+            function (error) {
+                console.error("Error loading OBJ:", error);
+            }
+        );
+
+        const baseColor2 = textureLoader.load("https://supanuch-t.github.io/gun/Material__1_baseColor.png");
+        const roughness2 = textureLoader.load("https://supanuch-t.github.io/gun/Material__2_baseColor.png");
+        const normalMap2 = textureLoader.load("https://supanuch-t.github.io/gun/Material__3_baseColor.png");
+        const uoimalMap2 = textureLoader.load("https://supanuch-t.github.io/gun/Material__5_baseColor.png");
+
+
+
+        // Light Controls
+        document.getElementById("keyLightControl").addEventListener("input", e => keyLight.intensity = e.target.value);
+        document.getElementById("fillLightControl").addEventListener("input", e => fillLight.intensity = e.target.value);
+        document.getElementById("backLightControl").addEventListener("input", e => backLight.intensity = e.target.value);
+        document.getElementById("rimLightControl").addEventListener("input", e => rimLight.intensity = e.target.value);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Responsive
+        window.addEventListener("resize", () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
